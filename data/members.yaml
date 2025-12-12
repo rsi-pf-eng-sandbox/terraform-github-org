@@ -1,0 +1,13 @@
+members:
+  - username: "AdachiShunta"
+    email: "shunta.adachi@jp.ricoh.com"
+    role: "member"
+  - username: "SHIRO-KAG"
+    email: "Keishiro.Iseri@jp.ricoh.com"
+    role: "admin"
+  - username: "sonedasaurus"
+    email: "takuya.soneda@jp.ricoh.com"
+    role: "admin"
+  - username: "wakamatsuwakamatsu"
+    email: "tomoki.wakamatsu@jp.ricoh.com"
+    role: "member"

@@ -1,0 +1,197 @@
+name: IssueOps - Add a Member
+
+on:
+  issues:
+    types:
+      - opened
+      - edited
+
+# ワークフローが複数起動したら自動キャンセル
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  process-member-request:
+    # メンバー管理関連のラベルが付いているIssueのみ処理
+    if: contains(github.event.issue.labels.*.name, 'issueops:member-add')
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Create GitHub App token
+        uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout repository
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
+      - name: Add eyes reaction
+        run: |
+          set -x
+          gh api --method POST \
+            -f content="eyes" \
+            "/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/reactions"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Parse Issue
+        id: parser
+        uses: issue-ops/parser@76d5aa095754de1493cbe41934484c4287e16350 # v4.2.0
+        with:
+          body: ${{ github.event.issue.body }}
+          issue-form-template: member-add.yml
+
+      - name: Remove existing status labels
+        uses: issue-ops/labeler@065f5b98cc58183664d7b9ab8668c35005093f12 # v3.0.0
+        with:
+          action: remove
+          issue_number: ${{ github.event.issue.number }}
+          label_patterns: |
+            status:*
+
+      - name: Validate Issue
+        id: validator
+        uses: issue-ops/validator@67329c9b82935865e526f57d2f74569039dfcfe3 # v3.3.0
+        env:
+          ORGANIZATION: rfgricoh
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-form-template: member-add.yml
+          parsed-issue-body: ${{ steps.parser.outputs.json }}
+          workspace: ${{ github.workspace }}
+
+      - name: Add status:validation-failed label
+        if: steps.validator.outputs.result == 'failure'
+        uses: issue-ops/labeler@065f5b98cc58183664d7b9ab8668c35005093f12 # v3.0.0
+        with:
+          action: add
+          issue_number: ${{ github.event.issue.number }}
+          labels: |
+            status:validation-failed
+
+      - name: Fail workflow if validation failed
+        if: steps.validator.outputs.result == 'failure'
+        run: |
+          echo "Validation failed. Stopping workflow."
+          exit 1
+
+      - name: Create branch
+        id: create-branch
+        run: |
+          BRANCH_NAME="issueops/issue-${{ github.event.issue.number }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH_NAME"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "Created branch $BRANCH_NAME"
+
+      - name: Update members.yaml
+        env:
+          GITHUB_USERNAME: ${{ steps.parser.outputs.parsed_github_username }}
+          EMAIL: ${{ steps.parser.outputs.parsed_email }}
+          ROLE: ${{ steps.parser.outputs.parsed_role }}
+        run: |
+          # parsed_roleが["member"]のような配列形式の文字列なので、jqで値を抽出
+          ROLE_VALUE=$(echo "$ROLE" | jq -r '.[0]')
+          ./scripts/add-member.sh "$GITHUB_USERNAME" "$EMAIL" "$ROLE_VALUE"
+
+      - name: Update teams.yaml
+        id: update-teams
+        env:
+          GITHUB_USERNAME: ${{ steps.parser.outputs.parsed_github_username }}
+          RAW_TEAMS: ${{ steps.parser.outputs.parsed_teams }}
+        run: |
+          # 改行区切りのチーム名をスペース区切りのチーム名に変換
+          SPACE_SEPARATED_TEAMS=$(echo -n "$RAW_TEAMS" | xargs)
+
+          # スクリプトを実行して、追加されたチームのリストを取得
+          TEAMS_LIST=$(./scripts/add-member-to-teams.sh "$GITHUB_USERNAME" $SPACE_SEPARATED_TEAMS)
+          echo "teams_list=$TEAMS_LIST" >> $GITHUB_OUTPUT
+
+      - name: Commit changes
+        env:
+          GITHUB_USERNAME: ${{ steps.parser.outputs.parsed_github_username }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          git add data/members.yaml data/teams.yaml
+          git commit -m "[IssueOps] メンバー追加: $GITHUB_USERNAME (Issue #$ISSUE_NUMBER)"
+
+      - name: Push branch
+        env:
+          BRANCH_NAME: ${{ steps.create-branch.outputs.branch_name }}
+        run: |
+          git push origin "$BRANCH_NAME"
+
+      - name: Create Pull Request
+        id: create-pr
+        env:
+          # リポジトリの GITHUB_TOKEN を使うとPR作成時のActionsがトリガーされないので、Apps tokenを使う
+          # 参考 : https://docs.github.com/ja/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GITHUB_USERNAME: ${{ steps.parser.outputs.parsed_github_username }}
+          EMAIL: ${{ steps.parser.outputs.parsed_email }}
+          ROLE: ${{ steps.parser.outputs.parsed_role }}
+          TEAMS_LIST: ${{ steps.update-teams.outputs.teams_list }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          BRANCH_NAME: ${{ steps.create-branch.outputs.branch_name }}
+        run: |
+          # PR本文の作成
+          PR_BODY=$(cat << EOF
+          ## 概要
+          Issue #${ISSUE_NUMBER} からのメンバー追加申請を処理します。
+
+          ## 変更内容
+          - **メンバー**: ${GITHUB_USERNAME}
+          - **メールアドレス**: ${EMAIL}
+          - **ロール**: ${ROLE}
+          - **追加されるチーム**: ${TEAMS_LIST}
+
+          ## 元Issue
+          Closes #${ISSUE_NUMBER}
+
+          EOF
+          )
+
+          PR_URL=$(gh pr create \
+            --title "[IssueOps] メンバー追加: ${GITHUB_USERNAME}" \
+            --body "$PR_BODY" \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --label "issueops:member-add")
+
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+
+      - name: Add status:submitted label
+        uses: issue-ops/labeler@065f5b98cc58183664d7b9ab8668c35005093f12 # v3.0.0
+        with:
+          action: add
+          issue_number: ${{ github.event.issue.number }}
+          labels: |
+            status:submitted
+
+      - name: Comment on Issue with PR link
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          PR_URL: ${{ steps.create-pr.outputs.pr_url }}
+        run: |
+          gh issue comment $ISSUE_NUMBER --body "✅ Pull Requestを作成しました: $PR_URL"

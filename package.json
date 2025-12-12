@@ -1,0 +1,13 @@
+{
+  "name": "terraform-github-org",
+  "version": "1.0.0",
+  "description": "IssueOps custom validators for member management",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@octokit/rest": "^22.0.0",
+    "validator": "^13.15.15",
+    "yaml": "^2.8.1"
+  }
+}

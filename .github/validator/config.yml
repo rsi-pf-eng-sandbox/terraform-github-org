@@ -1,0 +1,9 @@
+validators:
+  # issue-ops/validatorでフォームの各フィールドに対して実行したいスクリプトを以下に定義します。
+  # スクリプトはconfig.ymlと同じディレクトリに配置してください。
+  - field: github_username
+    script: username.js
+  - field: email
+    script: email.js
+  - field: teams
+    script: team.js

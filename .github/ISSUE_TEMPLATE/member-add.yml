@@ -1,0 +1,77 @@
+name: メンバー追加申請
+description: rfgricohにメンバーを追加する申請フォーム
+title: "[メンバー追加] "
+labels: ["issueops:member-add", "status:opened"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## rfgricohメンバー追加申請
+
+        新しいメンバーをrfgricohに追加するための申請フォームです。
+        すべての必須項目を入力してください。
+
+        なお、本フォームでは「1回の申請につき1名」の追加を受け付けています。複数名を追加したい場合は、リポジトリの README.md に記載されている手順に従って、メンバー追加用の Pull Request を作成してください。PR 作成の方法や不明点がある場合は、管理者に相談してください。
+
+  - type: input
+    id: github_username
+    attributes:
+      label: GitHubユーザー名
+      description: 追加するメンバーのGitHubユーザー名を入力してください
+      placeholder: "例: octocat"
+    validations:
+      required: true
+      
+  - type: input
+    id: email
+    attributes:
+      label: メールアドレス
+      description: メンバーのメールアドレスを入力してください（識別用）
+      placeholder: "例: user@example.com"
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: role
+    attributes:
+      label: ロール
+      description: 付与するロールを選択してください
+      options:
+        - member
+        - admin
+      default: 0
+    validations:
+      required: true
+      
+  - type: textarea
+    id: teams
+    attributes:
+      label: 追加するチーム
+      description: メンバーとして追加したいチーム名を1行に1つずつ入力してください（任意）。`ALL_MEMBERS`チームには自動的に追加されるため、記載の必要はありません。
+      placeholder: |
+        frontend-team
+        backend-team
+    validations:
+      required: false
+      
+  - type: textarea
+    id: reason
+    attributes:
+      label: 申請理由
+      description: メンバー追加の理由や背景を記載してください（任意）
+      placeholder: "例: プロジェクトXXXに参加のため"
+    validations:
+      required: false
+      
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 確認事項
+      description: 以下の項目を確認してください
+      options:
+        - label: 追加対象者に事前に承諾を得ています
+          required: true
+        - label: 追加対象者が事前にGitHub Enterpriseのライセンスを保有していることを確認しています
+          required: true
+        - label: Organizationへの招待の期限は1週間のため、申請が承認されてから1週間以内に参加を完了させることを理解しています
+          required: true
