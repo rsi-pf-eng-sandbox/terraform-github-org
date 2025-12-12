@@ -1,0 +1,38 @@
+name: Commit Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  commit-test:
+    name: Commit Test
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Create GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Checkout sandbox branch
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          ref: 'sandbox'
+
+      - name: Write timestamp and commit
+        run: |
+          TIMESTAMP="$(date)"
+          echo "$TIMESTAMP" >> ./timestamp.log
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add timestamp.log
+          git commit -m "Update timestamp: $TIMESTAMP"
+          git push origin sandbox
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}

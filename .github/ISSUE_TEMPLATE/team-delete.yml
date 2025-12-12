@@ -1,0 +1,54 @@
+name: チーム削除申請
+description: rfgricohのチームを削除する申請フォーム
+title: "[チーム削除] "
+labels: ["issueops:team-delete", "status:pending"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## チーム削除申請
+        
+        チームを削除するための申請フォームです。
+        **注意: チーム削除は取り消せません。慎重に検討してください。**
+        
+  - type: input
+    id: team_name
+    attributes:
+      label: 削除対象チーム名
+      description: 削除する既存のチーム名を入力してください
+      placeholder: "例: old-team"
+    validations:
+      required: true
+      
+  - type: textarea
+    id: reason
+    attributes:
+      label: 削除理由
+      description: チーム削除の理由を詳しく記載してください
+      placeholder: "例: プロジェクト終了により不要になったため"
+    validations:
+      required: true
+      
+  - type: checkboxes
+    id: impact_check
+    attributes:
+      label: 影響確認
+      description: 削除による影響を確認してください
+      options:
+        - label: 削除対象チームがリポジトリアクセス権を持っている場合の影響を確認済み
+          required: true
+        - label: 削除対象チームがOrganization設定(Organization role等)で使用されている場合の影響を確認済み
+          required: true
+        - label: チームメンバーへの事前通知を完了済み
+          required: true
+        - label: 代替アクセス方法や新しいチーム構成を検討済み（必要な場合）
+          required: true
+      
+  - type: checkboxes
+    id: final_confirmation
+    attributes:
+      label: 最終確認
+      description: 削除の最終確認を行ってください
+      options:
+        - label: 削除は取り消せないことを理解している
+          required: true

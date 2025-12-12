@@ -1,0 +1,83 @@
+name: IssueOps - Close linked issue and add labels when a PR is closed
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  handle-linked-issue:
+    # PRに issueops: から始まるラベルが含まれている場合のみ処理
+    # joinで配列を文字列に変換している理由:
+    # - github.event.pull_request.labels.*.name はラベル名の配列を返す
+    # - contains() は第1引数が配列の場合、第2引数と一致する要素を探すのでissueops:から始まるラベルを判定できない
+    # - joinでラベルの配列をカンマ区切りの文字列にすると、第2引数が第1引数の部分文字列となっているかを判定するので、issueops:から始まるラベルを検出できる
+    if: contains(join(github.event.pull_request.labels.*.name, ','), 'issueops:')
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    permissions:
+      pull-requests: read
+      issues: write
+
+    steps:
+      # PRに紐づくIssue番号を取得
+      - name: Fetch linked issue number
+        id: linked-issue
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          ISSUE_NUMBERS=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json closingIssuesReferences --jq '.closingIssuesReferences[].number' || true)
+
+          if [ -z "$ISSUE_NUMBERS" ]; then
+            echo "No linked issues found"
+            echo "issue_number=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          PRIMARY_ISSUE=$(echo "$ISSUE_NUMBERS" | head -n1)
+          echo "Found linked issues: $ISSUE_NUMBERS"
+          echo "issue_number=$PRIMARY_ISSUE" >> "$GITHUB_OUTPUT"
+
+      # 既存のstatus系ラベルを削除
+      - name: Remove existing status labels
+        if: steps.linked-issue.outputs.issue_number != ''
+        uses: issue-ops/labeler@065f5b98cc58183664d7b9ab8668c35005093f12 # v3.0.0
+        with:
+          action: remove
+          issue_number: ${{ steps.linked-issue.outputs.issue_number }}
+          label_patterns: |
+            status:*
+
+      # マージ済みのPRならstatus:approvedを付与
+      - name: Add status:approved label
+        if: steps.linked-issue.outputs.issue_number != '' && github.event.pull_request.merged == true
+        uses: issue-ops/labeler@065f5b98cc58183664d7b9ab8668c35005093f12 # v3.0.0
+        with:
+          action: add
+          issue_number: ${{ steps.linked-issue.outputs.issue_number }}
+          labels: |
+            status:approved
+
+      # マージされずクローズされたPRならstatus:deniedを付与
+      - name: Add status:denied label
+        if: steps.linked-issue.outputs.issue_number != '' && github.event.pull_request.merged == false
+        uses: issue-ops/labeler@065f5b98cc58183664d7b9ab8668c35005093f12 # v3.0.0
+        with:
+          action: add
+          issue_number: ${{ steps.linked-issue.outputs.issue_number }}
+          labels: |
+            status:denied
+
+      # PRがマージされずクローズされた場合、ラベル処理後にIssueをClose as not plannedにする
+      - name: Close linked issue
+        if: steps.linked-issue.outputs.issue_number != '' && github.event.pull_request.merged == false
+        env:
+          REPO: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ steps.linked-issue.outputs.issue_number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue close "$ISSUE_NUMBER" --repo "$REPO" --reason "not planned"

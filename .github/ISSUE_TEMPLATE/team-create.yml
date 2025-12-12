@@ -1,0 +1,73 @@
+name: チーム作成申請
+description: rfgricohに新しいチームを作成する申請フォーム
+title: "[チーム作成] "
+labels: ["issueops:team-create", "status:pending"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## チーム作成申請
+        
+        新しいチームをrfgricohに作成するための申請フォームです。
+        すべての必須項目を入力してください。
+        
+  - type: input
+    id: team_name
+    attributes:
+      label: チーム名
+      description: 作成するチームの名前を入力してください（英数字とハイフンのみ使用可）
+      placeholder: "例: rgc-cp-hwc-3hw-1g"
+    validations:
+      required: true
+      
+  - type: textarea
+    id: description
+    attributes:
+      label: チーム説明
+      description: チームの説明や役割を記載してください
+      placeholder: "例: RGC 商用印刷事業本部 ハードウェア開発センター 第三ＨＷ開発室 開発一グループのチーム"
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: privacy
+    attributes:
+      label: プライバシー設定
+      description: チームの公開レベルを選択してください
+      options:
+        - closed (rfgricoh内で可視)
+        - secret (メンバーのみ可視)
+      default: 0
+    validations:
+      required: true
+      
+  - type: textarea
+    id: maintainers
+    attributes:
+      label: メンテナー
+      description: チームのメンテナーとするGitHubユーザー名を1行に1つずつ入力してください
+      placeholder: |
+        octocat
+        github-user
+    validations:
+      required: true
+      
+  - type: textarea
+    id: members
+    attributes:
+      label: メンバー
+      description: チームのメンバーとするGitHubユーザー名を1行に1つずつ入力してください（任意）
+      placeholder: |
+        user1
+        user2
+    validations:
+      required: false
+      
+  - type: textarea
+    id: reason
+    attributes:
+      label: 作成理由
+      description: チーム作成の理由や背景を記載してください（任意）
+      placeholder: "例: 新しいプロジェクトXXXの開始に伴い、専用チームを作成"
+    validations:
+      required: false

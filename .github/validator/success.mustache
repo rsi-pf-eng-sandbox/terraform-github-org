@@ -1,0 +1,17 @@
+<!-- issue-ops/validator による検証が成功した時に表示するコメントのテンプレート -->
+
+## :tada: **リクエストを受け付けました**
+
+リクエストを受け付けました。以下はリクエストから抽出された内容です。
+この内容に基づいて、申請の作成を進めます。
+
+<!--prettier-ignore-start-->
+<!--markdownlint-disable MD034-->
+
+| 項目 | 値 |
+| ---- | --- |
+{{#each issue}}
+| `{{@key}}` | {{{newlines this}}} |
+{{/each}}
+
+<!--prettier-ignore-end-->

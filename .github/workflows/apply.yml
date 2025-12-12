@@ -1,0 +1,59 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '*.tf'
+      - 'data/**/*.yaml'
+
+jobs:
+  apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Create GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }} # Use GitHub App token to bypass repository rulesets
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.2
+
+      - name: Terraform Init
+        run: terraform init
+        env:
+          TF_VAR_github_token: ${{ steps.app-token.outputs.token }}
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        env:
+          TF_VAR_github_token: ${{ steps.app-token.outputs.token }}
+
+      - name: Commit terraform state
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add terraform.tfstate 2>/dev/null || true
+          if ! git diff --staged --quiet; then
+            git commit -m "Update terraform state after apply"
+            git push
+          else
+            echo "No state changes to commit"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }} # Repository rulesetsでmainに直接コミット不可としているので、GitHub Appsからのトークンでrulesetをbypassする
