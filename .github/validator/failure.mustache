@@ -1,0 +1,14 @@
+<!-- issue-ops/validator による検証が失敗した時に表示するコメントのテンプレート -->
+
+## :no_entry: **新規リクエストは却下されました**
+
+リクエストの検証に失敗しました。以下のエラーを確認し、元の issue を編集して修正してください。
+
+<!--prettier-ignore-start-->
+<!--markdownlint-disable MD032-->
+
+{{#each errors}}
+- {{this}}
+{{/each}}
+
+<!--prettier-ignore-end-->

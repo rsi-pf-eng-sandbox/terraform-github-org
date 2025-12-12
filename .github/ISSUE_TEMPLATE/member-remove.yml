@@ -1,0 +1,52 @@
+name: メンバー削除申請
+description: rfgricohからメンバーを削除する申請フォーム
+title: "[メンバー削除] "
+labels: ["issueops:member-remove", "status:pending"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## rfgricohメンバー削除申請
+
+        rfgricohからメンバーを削除するための申請フォームです。
+        すべての必須項目を入力してください。
+        
+  - type: input
+    id: github_username
+    attributes:
+      label: 削除対象のGitHubユーザー名
+      description: 削除するメンバーのGitHubユーザー名を入力してください
+      placeholder: "例: octocat"
+    validations:
+      required: true
+      
+  - type: textarea
+    id: reason
+    attributes:
+      label: 削除理由
+      description: メンバー削除の理由を詳しく記載してください
+      placeholder: "例: プロジェクト終了による離任、転職による退職等"
+    validations:
+      required: true
+     
+  - type: checkboxes
+    id: data_handling
+    attributes:
+      label: データ・アクセス権の処理
+      description: 削除に伴う処理を確認してください
+      options:
+        - label: 対象者が作成したプライベートリポジトリの処理について確認済み
+          required: true
+        - label: 対象者が管理者になっているリポジトリの引き継ぎについて確認済み
+          required: true
+          
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: 確認事項
+      description: 以下の項目を確認してください
+      options:
+        - label: 対象者に事前に通知済み（本人申請の場合もチェックしてください）
+          required: true
+        - label: Enterpriseライセンスを解放するには、Enterprise内の全Organizationから対象者を削除する必要があることを理解しています
+          required: true

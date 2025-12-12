@@ -1,0 +1,55 @@
+name: バグレポート
+description: システムのバグや不具合を報告する
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## バグレポート
+        
+        システムのバグや不具合について報告してください。
+        
+  - type: textarea
+    id: description
+    attributes:
+      label: バグの説明
+      description: バグや不具合の詳細を記載してください
+    validations:
+      required: true
+      
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 再現手順
+      description: バグを再現するための手順を記載してください
+      value: |
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+      
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待される動作
+      description: 本来期待される動作を記載してください
+    validations:
+      required: true
+      
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動作
+      description: 実際に発生している動作を記載してください
+    validations:
+      required: true
+      
+  - type: textarea
+    id: environment
+    attributes:
+      label: 環境情報
+      description: ブラウザやOSなど関連する環境情報を記載してください(任意)
+    validations:
+      required: false

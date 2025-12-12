@@ -1,0 +1,120 @@
+name: チーム編集申請
+description: 既存のチームを編集する申請フォーム
+title: "[チーム編集] "
+labels: ["issueops:team-edit", "status:pending"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## チーム編集申請
+        
+        既存のチームを編集するための申請フォームです。
+        すべての必須項目を入力してください。
+        
+  - type: input
+    id: team_name
+    attributes:
+      label: 編集対象チーム名
+      description: 編集する既存のチーム名を入力してください
+      placeholder: "例: frontend-team"
+    validations:
+      required: true
+      
+  - type: checkboxes
+    id: change_types
+    attributes:
+      label: 変更内容
+      description: 変更したい項目を選択してください（複数選択可）
+      options:
+        - label: チーム説明の変更
+        - label: プライバシー設定の変更
+        - label: メンバーの追加
+        - label: メンバーの削除
+        - label: メンテナーの追加
+        - label: メンテナーの削除
+        - label: その他
+    validations:
+      required: true
+      
+  - type: textarea
+    id: new_description
+    attributes:
+      label: 新しいチーム説明
+      description: 新しいチーム説明（説明変更を選択した場合のみ入力）
+    validations:
+      required: false
+      
+  - type: dropdown
+    id: new_privacy
+    attributes:
+      label: 新しいプライバシー設定
+      description: 新しいプライバシー設定（プライバシー設定変更を選択した場合のみ選択）
+      options:
+        - 変更なし
+        - closed (Organization内で可視)
+        - secret (メンバーのみ可視)
+      default: 0
+    validations:
+      required: false
+      
+  - type: textarea
+    id: add_members
+    attributes:
+      label: 追加するメンバー
+      description: 追加するGitHubユーザー名を1行に1つずつ入力（メンバー追加を選択した場合）
+      placeholder: |
+        new-user1
+        new-user2
+    validations:
+      required: false
+      
+  - type: textarea
+    id: remove_members
+    attributes:
+      label: 削除するメンバー
+      description: 削除するGitHubユーザー名を1行に1つずつ入力（メンバー削除を選択した場合）
+      placeholder: |
+        old-user1
+        old-user2
+    validations:
+      required: false
+      
+  - type: textarea
+    id: add_maintainers
+    attributes:
+      label: 追加するメンテナー
+      description: 追加するGitHubユーザー名を1行に1つずつ入力（メンテナー追加を選択した場合）
+      placeholder: |
+        new-maintainer1
+        new-maintainer2
+    validations:
+      required: false
+      
+  - type: textarea
+    id: remove_maintainers
+    attributes:
+      label: 削除するメンテナー
+      description: 削除するGitHubユーザー名を1行に1つずつ入力（メンテナー削除を選択した場合）
+      placeholder: |
+        old-maintainer1
+        old-maintainer2
+    validations:
+      required: false
+      
+  - type: textarea
+    id: other_changes
+    attributes:
+      label: その他の変更内容
+      description: 上記以外の変更がある場合は詳細を記載してください
+    validations:
+      required: false
+      
+  - type: textarea
+    id: reason
+    attributes:
+      label: 変更理由
+      description: 変更の理由や背景を記載してください
+      placeholder: "例: プロジェクト体制変更に伴うメンバー調整"
+    validations:
+      required: true
+      
