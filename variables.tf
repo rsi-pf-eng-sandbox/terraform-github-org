@@ -21,3 +21,9 @@ variable "actions_enabled_repositories_file" {
   type        = string
   default     = "data/actions-enabled-repositories.yaml"
 }
+
+variable "repositories_file" {
+  type        = string
+  description = "Path to YAML file containing repositories configuration"
+  default     = "data/repositories.yaml"
+}
