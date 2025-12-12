@@ -1,0 +1,37 @@
+# data/repositories.yaml
+repositories:
+  - name: TestRepository
+    description: Terraformの検証に使用します。
+    visibility: public      
+    auto_init: true             
+    delete_branch_on_merge: false
+    has_issues: true
+    has_projects: true
+    has_wiki: true
+    topics:
+      - terraform
+      - github-app
+
+  - name: terraform-github-org
+    description: Terraformの検証に使用します。
+    visibility: public
+    auto_init: false        
+    delete_branch_on_merge: false
+    has_issues: true
+    has_projects: true
+    has_wiki: true
+    topics:
+      - terraform
+      - github-app
+
+  - name: Generate-Test
+    description: リポジトリ生成検証
+    visibility: public
+    auto_init: false        
+    delete_branch_on_merge: false
+    has_issues: true
+    has_projects: true
+    has_wiki: true
+    topics:
+      - terraform
+      - github-app
