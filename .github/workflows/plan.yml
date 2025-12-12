@@ -52,7 +52,7 @@ jobs:
         continue-on-error: true
 
       - name: Update Pull Request
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && hashFiles('plan_output.txt') != ''
         uses: actions/github-script@v7
         env:
           PLAN: ${{ steps.plan.outputs.stdout }}

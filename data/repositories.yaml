@@ -23,3 +23,15 @@ repositories:
     topics:
       - terraform
       - github-app
+
+  - name: GenerateTest
+    description: 
+    visibility: public      
+    auto_init: true             
+    delete_branch_on_merge: false
+    has_issues: true
+    has_projects: true
+    has_wiki: true
+    topics:
+      - terraform
+      - github-app
