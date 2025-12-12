@@ -24,7 +24,7 @@ repositories:
       - terraform
       - github-app
 
-  - name: Generate Test
+  - name: GenerateTest
     description: 
     visibility: public      
     auto_init: true             
